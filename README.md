@@ -1,6 +1,6 @@
-# 项目目录
+## 项目目录
 
-- `ocr` ocr RapidOCR 版本模型
+- `ocr` umi-ocr RapidOCR 版本模型
 - `main.go` 源文件
 - `dist` 打包后的文件，直接使用即可。
     - `linux`   可执行文件 main
@@ -10,7 +10,7 @@
 
 ### 后端服务需要开放8080端口
 
-### umi-ocr项目源码   [https://github.com/hiroi-sora/RapidOCR-json](https://github.com/hiroi-sora/RapidOCR-json)
+### umi-ocr项目源码   [https://github.com/hiroi-sora/Umi-OCR](https://github.com/hiroi-sora/Umi-OCR)
 
 ### 图片在线转base64   [https://www.jyshare.com/front-end/59/](https://www.jyshare.com/front-end/59/)
 
