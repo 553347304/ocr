@@ -88,7 +88,7 @@ func ocr(c *gin.Context) {
 	cmd.Dir = "RapidOCR"
 	output, err := cmd.Output()
 	if err != nil {
-		c.JSON(200, Result[Data]{Code: 7, Message: fmt.Sprint("内部路径错误", err)})
+		c.JSON(200, Result[string]{Code: 7, Message: fmt.Sprint("内部路径错误", err), Data: []string{}})
 		return
 	}
 	re := regexp.MustCompile(`\{.*\}`)
@@ -97,7 +97,7 @@ func ocr(c *gin.Context) {
 	var response Response
 	err = json.Unmarshal([]byte(matches[0]), &response)
 	if err != nil {
-		c.JSON(200, Result[Data]{Code: 7, Message: "内部错误"})
+		c.JSON(200, Result[string]{Code: 7, Message: "内部错误", Data: []string{}})
 		return
 	}
 
