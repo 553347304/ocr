@@ -25,6 +25,8 @@ type Response struct {
 
 type Request struct {
 	Model  string `json:"model"`
+	X      int    `json:"x"`
+	Y      int    `json:"y"`
 	Base64 string `json:"base64"`
 }
 
@@ -91,21 +93,18 @@ func ocr(c *gin.Context) {
 	}
 	re := regexp.MustCompile(`\{.*\}`)
 	matches := re.FindAllString(string(output), -1)
-
 	var response Response
 	err = json.Unmarshal([]byte(matches[0]), &response)
-	if err != nil {
-		c.JSON(200, Result{Code: 7, Message: "内部错误" + err.Error()})
-		return
-	}
-
 	//logs.Structs(response)
-	for _, datum := range response.Data {
-		item = append(item, datum.Text)
-		data = append(data, Data{
-			X: datum.Box[0][0] + (datum.Box[2][0]-datum.Box[0][0])/2,
-			Y: datum.Box[0][1] + (datum.Box[2][1]-datum.Box[0][1])/2,
-		})
+	if err == nil {
+		for _, datum := range response.Data {
+
+			item = append(item, datum.Text)
+			data = append(data, Data{
+				X: cr.X + datum.Box[0][0] + (datum.Box[2][0]-datum.Box[0][0])/2,
+				Y: cr.Y + datum.Box[0][1] + (datum.Box[2][1]-datum.Box[0][1])/2,
+			})
+		}
 	}
 	c.JSON(200, Result{Code: 0, Message: "model:" + cr.Model, Item: item, Data: data}) // 返回全部
 }
