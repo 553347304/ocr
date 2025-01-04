@@ -39,7 +39,6 @@ func (*httpServer) Timeout(timeout time.Duration) gin.HandlerFunc {
 			c.AbortWithStatusJSON(200, gin.H{
 				"code":    "8",
 				"message": "请求超时",
-				"data":    []string{},
 			})
 		}
 	}

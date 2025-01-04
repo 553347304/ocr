@@ -19,53 +19,36 @@
 | 请求参数     | Body   | 类型     | 默认值     | 可选参数                | 描述                               |
 |----------|--------|--------|---------|---------------------|----------------------------------|
 | `model`  | `json` | string | v4      | `v3` `v4`           | PP模型版本                           |
-| `key`    | `json` | string | "" 返回全部 | `指定文本` `ALL` `TEXT` | TEXT返回第一个找到的文本 <br/>ALL返回全部文本    |
 | `base64` | `json` | string | ""      | 无                   | iV开头的base64字符串  `iVBORw0KGgo...` |
 
 ## 返回值
 
 - `code`: 状态码0为正常返回  `请求超过10秒自动超时`
 - `message`：响应信息
-- `data`内容为数组。数组每一项为字典，含四个元素： 当Key=ALL返回string数组
-    - `x`：找到文本中心点x坐标，整数。
-    - `y`：找到文本中心点y坐标，整数。
-    - `text`：文本内容，字符串。
-    - `score`：识别置信度，浮点数。
 
 ## 返回示例
 
 ```json
 {
   "code": 0,
+  "message": "model:v4",
+  "item": [
+    "10"
+  ],
   "data": [
     {
-      "x": 104,
-      "y": 504,
-      "text": "text",
-      "score": 0.27060410380363464
+      "x": 12,
+      "y": 14
     }
   ]
 }
 ```
-
-key为`ALL`时
-
-```json
-{
-  "code": 0,
-  "data": [
-    ""
-  ]
-}
-```
-
 ### Auto.js调用例子
 
 ```js
 let img = captureScreen();
 let result = http.postJson("http://ocr.tcbyj.cn", {
     "model": "v4",
-    "key": "",
     "base64": images.toBase64(img),
 }).body.json();
 console.log(result);

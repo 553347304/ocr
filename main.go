@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"path"
 	"regexp"
-	"strings"
 	"time"
 )
 
@@ -26,35 +25,34 @@ type Response struct {
 
 type Request struct {
 	Model  string `json:"model"`
-	Key    string `json:"key"`
 	Base64 string `json:"base64"`
 }
 
 type Data struct {
-	X     int     `json:"x"`
-	Y     int     `json:"y"`
-	Text  string  `json:"text"`
-	Score float64 `json:"score"`
+	X int `json:"x"`
+	Y int `json:"y"`
 }
-type Result[T any] struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Data    []T    `json:"data"`
+type Result struct {
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Item    []string `json:"item"`
+	Data    []Data   `json:"data"`
 }
 
 func ocr(c *gin.Context) {
 	var cr Request
-	var list = make([]Data, 0)
+	var data = make([]Data, 0)
+	var item = make([]string, 0)
 	err := c.ShouldBindJSON(&cr)
 	if err != nil {
 		body, _ := ioutil.ReadAll(c.Request.Body)
-		c.JSON(200, Result[Data]{Code: 7, Message: "参数错误: " + string(body)})
+		c.JSON(200, Result{Code: 7, Message: "参数错误: " + string(body)})
 		return
 	}
 
 	imageBytes, err := base64.StdEncoding.DecodeString(cr.Base64)
 	if err != nil {
-		c.JSON(200, Result[Data]{Code: 7, Message: "base64编码错误: " + cr.Base64})
+		c.JSON(200, Result{Code: 7, Message: "base64编码错误: " + cr.Base64})
 		return
 	}
 
@@ -71,7 +69,7 @@ func ocr(c *gin.Context) {
 	case "v4", "v3":
 		break
 	default:
-		c.JSON(200, Result[Data]{Code: 7, Message: "不存在此模型版本"})
+		c.JSON(200, Result{Code: 7, Message: "不存在此模型版本"})
 		return
 	}
 
@@ -88,7 +86,7 @@ func ocr(c *gin.Context) {
 	cmd.Dir = "RapidOCR"
 	output, err := cmd.Output()
 	if err != nil {
-		c.JSON(200, Result[string]{Code: 7, Message: fmt.Sprint("内部路径错误", err), Data: []string{}})
+		c.JSON(200, Result{Code: 7, Message: fmt.Sprint("内部路径错误", err.Error())})
 		return
 	}
 	re := regexp.MustCompile(`\{.*\}`)
@@ -97,36 +95,19 @@ func ocr(c *gin.Context) {
 	var response Response
 	err = json.Unmarshal([]byte(matches[0]), &response)
 	if err != nil {
-		c.JSON(200, Result[string]{Code: 7, Message: "内部错误", Data: []string{}})
+		c.JSON(200, Result{Code: 7, Message: "内部错误" + err.Error()})
 		return
 	}
 
 	//logs.Structs(response)
-
-	var all []string
 	for _, datum := range response.Data {
-		data := Data{
-			X:     datum.Box[0][0] + (datum.Box[2][0]-datum.Box[0][0])/2,
-			Y:     datum.Box[0][1] + (datum.Box[2][1]-datum.Box[0][1])/2,
-			Text:  datum.Text,
-			Score: datum.Score,
-		}
-		all = append(all, datum.Text)
-		if cr.Key != "" && cr.Key != "ALL" {
-			// 返回指定文本
-			if cr.Key == "TEXT" || strings.Contains(datum.Text, cr.Key) {
-				c.JSON(200, Result[Data]{Code: 0, Message: "ok 模型:" + cr.Model, Data: []Data{data}})
-				return
-			}
-		} else {
-			list = append(list, data)
-		}
+		item = append(item, datum.Text)
+		data = append(data, Data{
+			X: datum.Box[0][0] + (datum.Box[2][0]-datum.Box[0][0])/2,
+			Y: datum.Box[0][1] + (datum.Box[2][1]-datum.Box[0][1])/2,
+		})
 	}
-	if cr.Key == "ALL" {
-		c.JSON(200, Result[string]{Code: 0, Message: "ok 模型:" + cr.Model, Data: all}) // 返回全部文本
-		return
-	}
-	c.JSON(200, Result[Data]{Code: 0, Message: "ok 模型:" + cr.Model, Data: list}) // 返回全部
+	c.JSON(200, Result{Code: 0, Message: "model:" + cr.Model, Item: item, Data: data}) // 返回全部
 }
 
 func main() {
