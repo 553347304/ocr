@@ -25,6 +25,7 @@ type Response struct {
 
 type Request struct {
 	Model  string `json:"model"`
+	Dict   string `json:"dict"`
 	X      int    `json:"x"`
 	Y      int    `json:"y"`
 	Base64 string `json:"base64"`
@@ -41,6 +42,7 @@ type Result struct {
 	Data    []Data   `json:"data"`
 }
 
+// RapidOCR-json.exe --models=models --image_path=1.png
 func ocr(c *gin.Context) {
 	var cr Request
 	var data = make([]Data, 0)
@@ -75,13 +77,18 @@ func ocr(c *gin.Context) {
 		return
 	}
 
+	if cr.Dict == "" {
+		cr.Dict = "ppocr_keys_v1.txt"
+	}
+	
 	cmd := exec.Command(
 		//"wine", // Linux执行时
 		path.Join(dir, "RapidOCR", "RapidOCR-json.exe"),
 		"--models=models",
-		fmt.Sprintf("--det=ch_PP-OCR%s_det_infer.onnx", cr.Model),
 		"--cls=ch_ppocr_mobile_v2.0_cls_infer.onnx",
+		fmt.Sprintf("--det=ch_PP-OCR%s_det_infer.onnx", cr.Model),
 		fmt.Sprintf("--ch_PP-OCR%s_rec_infer.onnx", cr.Model),
+		fmt.Sprintf("--keys=%s", cr.Dict),
 		"--keys=ppocr_keys_v1.txt",
 		"--image_path="+tmpFile.Name(),
 	)
