@@ -91,6 +91,7 @@ func ocr(c *gin.Context) {
 	switch cr.Model {
 	case "":
 		cr.Model = "v4"
+
 	case "v4", "v3":
 		break
 	default:
@@ -108,7 +109,7 @@ func ocr(c *gin.Context) {
 		"--models=models",
 		"--cls=ch_ppocr_mobile_v2.0_cls_infer.onnx",
 		fmt.Sprintf("--det=ch_PP-OCR%s_det_infer.onnx", cr.Model),
-		fmt.Sprintf("--ch_PP-OCR%s_rec_infer.onnx", cr.Model),
+		fmt.Sprintf("--rec=ch_PP-OCR%s_rec_infer.onnx", cr.Model),
 		fmt.Sprintf("--keys=%s", cr.Dict),
 		"--image_path="+imagePath,
 	)
