@@ -5,7 +5,7 @@
 
 ### RapidOCR模型下载地址     [https://vip.123pan.cn/1821560246/%E7%83%AD%E6%9B%B4/%E5%85%B6%E4%BB%96/model/RapidOCR.7z](https://vip.123pan.cn/1821560246/%E7%83%AD%E6%9B%B4/%E5%85%B6%E4%BB%96/model/RapidOCR.7z)
 
-### RapidOCR官网     [https://github.com/hiroi-sora/RapidOCR-json?tab=readme-ov-file](https://github.com/hiroi-sora/RapidOCR-json?tab=readme-ov-file)
+### RapidOCR官网     [https://github.com/RapidAI/RapidOCR](https://github.com/RapidAI/RapidOCR)
 
 ### 图片在线转base64   [https://www.jyshare.com/front-end/59/](https://www.jyshare.com/front-end/59/)
 
