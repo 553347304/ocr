@@ -2,6 +2,7 @@
 
 - `dist` 打包后的文件，直接使用即可. `RapidOCR模型要和main.exe`放在一起
     - `windows` 可执行文件 main.exe
+    - `linux` 可执行文件 main  `超级慢比window慢10倍+`
 
 ### RapidOCR模型下载地址     [https://vip.123pan.cn/1821560246/%E7%83%AD%E6%9B%B4/%E5%85%B6%E4%BB%96/model/RapidOCR.7z](https://vip.123pan.cn/1821560246/%E7%83%AD%E6%9B%B4/%E5%85%B6%E4%BB%96/model/RapidOCR.7z)
 
