@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
+	"io"
 	"ocr/middleware"
 	"os"
 	"os/exec"
 	"path"
 	"regexp"
+	"runtime"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -55,6 +55,32 @@ func InList(imageExtensions []string, ext string) bool {
 	return false
 }
 
+var GOOS = runtime.GOOS
+
+func Command(dir string, cr Request, imagePath string) *exec.Cmd {
+	if GOOS == "linux" {
+		return exec.Command(
+			"wine", // Linux执行时
+			path.Join(dir, "RapidOCR", "RapidOCR-json.exe"),
+			"--models=models",
+			"--cls=ch_ppocr_mobile_v2.0_cls_infer.onnx",
+			fmt.Sprintf("--det=ch_PP-OCR%s_det_infer.onnx", cr.Model),
+			fmt.Sprintf("--rec=ch_PP-OCR%s_rec_infer.onnx", cr.Model),
+			fmt.Sprintf("--keys=%s", cr.Dict),
+			"--image_path="+imagePath,
+		)
+	}
+	return exec.Command(
+		path.Join(dir, "RapidOCR", "RapidOCR-json.exe"),
+		"--models=models",
+		"--cls=ch_ppocr_mobile_v2.0_cls_infer.onnx",
+		fmt.Sprintf("--det=ch_PP-OCR%s_det_infer.onnx", cr.Model),
+		fmt.Sprintf("--rec=ch_PP-OCR%s_rec_infer.onnx", cr.Model),
+		fmt.Sprintf("--keys=%s", cr.Dict),
+		"--image_path="+imagePath,
+	)
+}
+
 // go build -ldflags="-H windowsgui" main.go
 // RapidOCR-json.exe --models=models --image_path=1.png
 func ocr(c *gin.Context) {
@@ -63,7 +89,7 @@ func ocr(c *gin.Context) {
 	var item = make([]string, 0)
 	err := c.ShouldBindJSON(&cr)
 	if err != nil {
-		body, _ := ioutil.ReadAll(c.Request.Body)
+		body, _ := io.ReadAll(c.Request.Body)
 		c.JSON(200, Result{Code: 7, Message: "参数错误: " + string(body)})
 		return
 	}
@@ -79,7 +105,7 @@ func ocr(c *gin.Context) {
 			return
 		}
 
-		tmpFile, _ := ioutil.TempFile("", "img-")
+		tmpFile, _ := os.CreateTemp("", "img-")
 		tmpFile.Write(imageBytes)
 		tmpFile.Close()
 		defer os.Remove(tmpFile.Name())
@@ -91,7 +117,6 @@ func ocr(c *gin.Context) {
 	switch cr.Model {
 	case "":
 		cr.Model = "v4"
-
 	case "v4", "v3":
 		break
 	default:
@@ -103,17 +128,10 @@ func ocr(c *gin.Context) {
 		cr.Dict = "ppocr_keys_v1.txt"
 	}
 
-	cmd := exec.Command(
-		//"wine", // Linux执行时
-		path.Join(dir, "RapidOCR", "RapidOCR-json.exe"),
-		"--models=models",
-		"--cls=ch_ppocr_mobile_v2.0_cls_infer.onnx",
-		fmt.Sprintf("--det=ch_PP-OCR%s_det_infer.onnx", cr.Model),
-		fmt.Sprintf("--rec=ch_PP-OCR%s_rec_infer.onnx", cr.Model),
-		fmt.Sprintf("--keys=%s", cr.Dict),
-		"--image_path="+imagePath,
-	)
-	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	cmd := Command(dir, cr, imagePath)
+
+	//cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}	// 隐藏控制台黑窗
+
 	cmd.Dir = "RapidOCR"
 	output, err := cmd.Output()
 	if err != nil {
@@ -139,8 +157,15 @@ func ocr(c *gin.Context) {
 }
 
 func main() {
+	gin.SetMode("release")
 	r := gin.Default()
-	r.Use(middleware.Http().Timeout(10 * time.Second))
+
+	r.Use(middleware.Http().Timeout(60 * time.Second)) // 设置1分钟自动超时
 	r.POST("/", ocr)
-	r.Run(":80")
+
+	if GOOS == "linux" {
+		r.Run(":8888")
+	} else {
+		r.Run(":80")
+	}
 }
